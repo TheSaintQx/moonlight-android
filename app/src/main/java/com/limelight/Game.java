@@ -29,6 +29,7 @@ import com.limelight.nvstream.input.MouseButtonPacket;
 import com.limelight.nvstream.jni.MoonBridge;
 import com.limelight.preferences.GlPreferences;
 import com.limelight.preferences.PreferenceConfiguration;
+import com.limelight.assistant.AssistantCaptureManager;
 import com.limelight.ui.GameGestures;
 import com.limelight.ui.StreamView;
 import com.limelight.utils.Dialog;
@@ -137,6 +138,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
     private boolean waitingForAllModifiersUp = false;
     private int specialKeyCode = KeyEvent.KEYCODE_UNKNOWN;
     private StreamView streamView;
+    private AssistantCaptureManager assistantManager;
     private long lastAbsTouchUpTime = 0;
     private long lastAbsTouchDownTime = 0;
     private float lastAbsTouchUpX, lastAbsTouchUpY;
@@ -237,6 +239,8 @@ public class Game extends Activity implements SurfaceHolder.Callback,
 
         // Listen for non-touch events on the game surface
         streamView = findViewById(R.id.surfaceView);
+        assistantManager = new AssistantCaptureManager(this, getIntent().getStringExtra(EXTRA_APP_NAME));
+        assistantManager.start();
         streamView.setOnGenericMotionListener(this);
         streamView.setOnKeyListener(this);
         streamView.setInputCallbacks(this);
@@ -1073,6 +1077,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         }
 
         super.onPause();
+        if (assistantManager != null) assistantManager.stop();
     }
 
     @Override
@@ -2698,3 +2703,9 @@ public class Game extends Activity implements SurfaceHolder.Callback,
         }
     }
 }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (assistantManager != null) assistantManager.start();
+    }
