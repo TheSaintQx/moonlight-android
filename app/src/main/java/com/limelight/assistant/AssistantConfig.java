@@ -1,6 +1,5 @@
 package com.limelight.assistant;
 
-/** Константы ассистента. Меняются перед каждой пересборкой. */
 public final class AssistantConfig {
     public static final String BACKEND_URL = "https://moonlight-assistant-backend.onrender.com";
     public static final String AUTH_TOKEN = "c14b97100ed9ac117894752f34be728e28d12fc875badd12";
