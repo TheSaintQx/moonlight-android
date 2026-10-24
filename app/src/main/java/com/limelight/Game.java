@@ -2700,12 +2700,13 @@ public class Game extends Activity implements SurfaceHolder.Callback,
                 return handleKeyMultiple(keyEvent);
             default:
                 return false;
-        }
+                }
     }
-}
 
     @Override
     protected void onResume() {
         super.onResume();
         if (assistantManager != null) assistantManager.start();
     }
+}
+
