@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
 import android.util.Base64;
 import android.view.PixelCopy;
 import android.view.SurfaceView;
@@ -52,7 +53,6 @@ public final class AssistantCaptureManager {
     public void stop() {
         running.set(false);
         handler.removeCallbacksAndMessages(null);
-        workerThread.quitSafely();
     }
 
     private void cycle() {
@@ -104,7 +104,7 @@ public final class AssistantCaptureManager {
             PixelCopy.request(sv, dest, status -> {
                 ok.set(status == PixelCopy.SUCCESS);
                 latch.countDown();
-            }, handler);
+            }, }, new Handler(Looper.getMainLooper()));
         } catch (Exception e) {
             return false;
         }
