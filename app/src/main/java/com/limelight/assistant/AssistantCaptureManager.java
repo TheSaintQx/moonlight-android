@@ -104,7 +104,7 @@ public final class AssistantCaptureManager {
             PixelCopy.request(sv, dest, status -> {
                 ok.set(status == PixelCopy.SUCCESS);
                 latch.countDown();
-            }, }, new Handler(Looper.getMainLooper()));
+            }, new Handler(Looper.getMainLooper()));
         } catch (Exception e) {
             return false;
         }
