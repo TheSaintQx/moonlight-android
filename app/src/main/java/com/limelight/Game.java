@@ -239,7 +239,7 @@ public class Game extends Activity implements SurfaceHolder.Callback,
 
         // Listen for non-touch events on the game surface
         streamView = findViewById(R.id.surfaceView);
-        assistantManager = new AssistantCaptureManager(this, getIntent().getStringExtra(EXTRA_APP_NAME));
+        assistantManager = new AssistantCaptureManager(streamView, getIntent().getStringExtra(EXTRA_APP_NAME));
         assistantManager.start();
         streamView.setOnGenericMotionListener(this);
         streamView.setOnKeyListener(this);
