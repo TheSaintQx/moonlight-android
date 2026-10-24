@@ -284,4 +284,47 @@
             android:summary="@string/summary_privacy_policy"
             url="https://moonlight-stream.org/privacy.html"/>
     </PreferenceCategory-->
-</PreferenceScreen>
+<!-- Путь: app/src/main/res/xml/preferences.xml
+     Вставьте этот блок целиком ПЕРЕД закрывающим </PreferenceScreen>. -->
+<PreferenceCategory
+    android:title="Голосовой помощник (Алиса)"
+    android:key="category_assistant">
+
+    <CheckBoxPreference
+        android:key="checkbox_assistant_enabled"
+        android:title="Отправлять кадры помощнику"
+        android:summary="Раз в несколько секунд снимок экрана игры уходит на ваш сервер"
+        android:defaultValue="true" />
+
+    <EditTextPreference
+        android:key="edit_assistant_url"
+        android:title="Адрес сервера"
+        android:summary="Например: https://имя-сервиса.onrender.com"
+        android:dialogTitle="Адрес сервера"
+        android:hint="https://имя-сервиса.onrender.com"
+        android:inputType="textUri"
+        android:singleLine="true"
+        android:dependency="checkbox_assistant_enabled" />
+
+    <EditTextPreference
+        android:key="edit_assistant_token"
+        android:title="Токен доступа"
+        android:summary="Хранится только на этом телефоне, в бэкап не попадает"
+        android:dialogTitle="Токен доступа"
+        android:inputType="textPassword"
+        android:singleLine="true"
+        android:dependency="checkbox_assistant_enabled" />
+
+    <EditTextPreference
+        android:key="edit_assistant_pair_code"
+        android:title="Код привязки (необязательно)"
+        android:summary="Уходит серверу в поле meta.pair_code"
+        android:dialogTitle="Код привязки"
+        android:inputType="text"
+        android:singleLine="true"
+        android:dependency="checkbox_assistant_enabled" />
+
+    <com.limelight.preferences.AssistantStatusPreference
+        android:key="assistant_status"
+        android:title="Последний статус" />
+</PreferenceCategory></PreferenceScreen>
