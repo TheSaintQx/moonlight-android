@@ -85,6 +85,14 @@ public class AssistantCaptureManager {
             return;
         }
         consecutiveFailures = 0;
+        // База знаний: сервер хранит её в памяти процесса и теряет при рестарте,
+        // поэтому при каждом старте сессии отправляем сохранённую базу заново.
+        if (AssistantKb.hasSaved(appContext)) {
+            Thread kbThread = new Thread(() -> AssistantKb.uploadIfSaved(appContext));
+            kbThread.setDaemon(true);
+            kbThread.setName("assistant-kb-upload");
+            kbThread.start();
+        }
         handler.postDelayed(this::cycle, FIRST_FRAME_DELAY_MS);
     }
 
