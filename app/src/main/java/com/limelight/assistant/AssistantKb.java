@@ -13,6 +13,8 @@ import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.limelight.preferences.KbLoaderPreference;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
