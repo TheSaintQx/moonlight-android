@@ -327,4 +327,10 @@
     <com.limelight.preferences.AssistantStatusPreference
         android:key="assistant_status"
         android:title="Последний статус" />
+
+    <com.limelight.preferences.KbLoaderPreference
+        android:key="assistant_kb"
+        android:title="База знаний (JSON)"
+        android:summary="Тап - выбрать файл базы, он сохранится и уйдёт на сервер"
+        android:dependency="checkbox_assistant_enabled" />
 </PreferenceCategory></PreferenceScreen>
