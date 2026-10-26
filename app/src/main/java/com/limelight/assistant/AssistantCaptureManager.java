@@ -40,6 +40,10 @@ public class AssistantCaptureManager {
     private static final int MAX_CONSECUTIVE_FAILURES = 5;
     private static final long RETRY_AFTER_FAILURES_MS = 30000;
     private static final long FIRST_FRAME_DELAY_MS = 1500;
+    // Интервал проверки базы знаний на сервере (посреди сессии).
+    private static final long KB_CHECK_INTERVAL_MS = 5 * 60 * 1000;
+    // Быстрая повторная проверка, если сервер ещё не ответил (просыпается).
+    private static final long KB_CHECK_RETRY_MS = 60 * 1000;
 
     private final SurfaceView surfaceView;
     private final Context appContext;
@@ -94,11 +98,75 @@ public class AssistantCaptureManager {
             kbThread.start();
         }
         handler.postDelayed(this::cycle, FIRST_FRAME_DELAY_MS);
+        // Периодический контроль базы знаний: если сервер потерял базу
+        // (рестарт Render посреди игры), перезагружаем её без участия игрока.
+        handler.postDelayed(this::kbCheck, KB_CHECK_INTERVAL_MS);
     }
 
     public void stop() {
         running.set(false);
         handler.removeCallbacksAndMessages(null);
+    }
+
+    // Периодическая проверка: держит ли сервер базу знаний. Вызывается по таймеру.
+    private void kbCheck() {
+        if (!running.get()) {
+            return;
+        }
+        long nextDelay = KB_CHECK_INTERVAL_MS;
+        try {
+            if (AssistantKb.hasSaved(appContext)) {
+                int articles = kbArticlesOnServer();
+                if (articles == 0) {
+                    // Сервер перезапустился и потерял базу - отправляем заново.
+                    report("база знаний потеряна сервером - перезагрузка...");
+                    AssistantKb.uploadIfSaved(appContext);
+                } else if (articles < 0) {
+                    // Ответа нет (сервер просыпается или нет сети) - проверим раньше.
+                    nextDelay = KB_CHECK_RETRY_MS;
+                }
+                // articles > 0 - база на месте, ничего не делаем.
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "kb check failed", t);
+            nextDelay = KB_CHECK_RETRY_MS;
+        }
+        if (running.get()) {
+            handler.postDelayed(this::kbCheck, nextDelay);
+        }
+    }
+
+    // Число статей базы на сервере из GET /health; -1 - если определить не удалось.
+    private int kbArticlesOnServer() {
+        AssistantSettings s = settings;
+        HttpURLConnection conn = null;
+        try {
+            conn = (HttpURLConnection) new URL(s.url + "/health").openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
+            conn.setReadTimeout(READ_TIMEOUT_MS);
+            int code = conn.getResponseCode();
+            if (code < 200 || code >= 300) {
+                return -1;
+            }
+            StringBuilder sb = new StringBuilder();
+            try (InputStream is = conn.getInputStream()) {
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = is.read(buf)) > 0 && sb.length() < 65536) {
+                    sb.append(new String(buf, 0, n, StandardCharsets.UTF_8));
+                }
+            }
+            JSONObject root = new JSONObject(sb.toString());
+            JSONObject kb = root.optJSONObject("kb");
+            return kb == null ? -1 : kb.optInt("articles", -1);
+        } catch (Exception e) {
+            return -1;
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
+        }
     }
 
     private void cycle() {
