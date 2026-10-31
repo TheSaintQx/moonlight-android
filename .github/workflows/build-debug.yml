@@ -1,0 +1,55 @@
+name: Build Debug APK
+
+on:
+  push:
+    branches: [feature/game-assistant]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Install SDK components
+        run: |
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          if [ ! -d "$SDK" ]; then
+            echo "Android SDK not found at $SDK" >&2
+            exit 1
+          fi
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "sdk.dir=$SDK" > local.properties
+          SM=$(find "$SDK/cmdline-tools" -name sdkmanager -type f 2>/dev/null | sort | tail -1)
+          if [ -z "$SM" ]; then
+            echo "sdkmanager not found under $SDK/cmdline-tools" >&2
+            exit 1
+          fi
+          yes | "$SM" --licenses >/dev/null 2>&1 || true
+          "$SM" --install "ndk;29.0.14206865" >/dev/null 2>&1 || true
+          if [ ! -d "$SDK/ndk/29.0.14206865" ]; then
+            echo "NDK 29.0.14206865 was not installed" >&2
+            ls "$SDK/ndk" || true
+            exit 1
+          fi
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
